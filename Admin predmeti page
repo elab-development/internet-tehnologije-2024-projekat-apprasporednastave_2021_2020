@@ -1,0 +1,303 @@
+import "../../style/home.css";
+import "../../style/swal.css";
+import Navbar from "../reusable/Navbar.jsx";
+import { useState, useEffect, useMemo } from "react";
+import axios from "axios";
+import Swal from "sweetalert2";
+import PredmetForm from "../reusable/PredmetForm.jsx";
+import { MdDelete } from "react-icons/md";
+import { GoPencil } from "react-icons/go";
+import { useNavigate } from "react-router-dom";
+import Paginacija from "../reusable/Paginacija.jsx";
+
+function AdminPredmetiPage({}) {
+  const refreshPage = () => {
+    window.location.reload();
+  };
+  var isAdmin = window.sessionStorage.getItem("role") === "1";
+  const navigate = useNavigate();
+  if (!isAdmin) {
+    navigate("/");
+  }
+  const [predmeti, setPredmeti] = useState(null);
+  const [maxpredmeta, setMaxpredmeta] = useState(-1);
+  const [strana, setStrana] = useState(1);
+  const po_strani = 5;
+  const br_strana = useMemo(() => Math.ceil(maxpredmeta / po_strani), [maxpredmeta, po_strani]);
+
+  const [index, setIndex] = useState(-1);
+  const [prikaziformu, setPrikaziformu] = useState(false);
+  const [tip, setTip] = useState("azuriraj");
+  var config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/predmetipg",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  var config2 = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/maxpredmeta",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  var config3 = {
+    method: "put",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/novipredmet",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {
+      naziv: "",
+      opis: "",
+      ESPB: -1,
+    },
+  };
+
+  var config4 = {
+    method: "patch",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/izmenipredmet",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {
+      naziv: "",
+      opis: "",
+      ESPB: -1,
+      id: -1,
+    },
+  };
+
+  var config5 = {
+    method: "delete",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/izbrisipredmet",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {
+      predmet_id: -1,
+    },
+  };
+
+  useEffect(() => {
+    if (maxpredmeta === -1) {
+      axios(config2)
+        .then(function (response) {
+          console.log(response.data.max_pred);
+          setMaxpredmeta(response.data.max_pred);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+    if (predmeti === null) {
+      config.url = "http://127.0.0.1:8000/api/predmetipg/" + (strana - 1) * po_strani + "/" + po_strani;
+      axios(config)
+        .then(function (response) {
+          setPredmeti(response.data.predmeti);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+  }, []);
+
+  function osvezitabelu(i) {
+    config.url = "http://127.0.0.1:8000/api/predmetipg/" + (i - 1) * po_strani + "/" + po_strani;
+    axios(config)
+      .then(function (response) {
+        setPredmeti(response.data.predmeti);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
+
+  function promeniStranu(i) {
+    //console.log("Menjam stranu " + i);
+    setStrana(i);
+    osvezitabelu(i);
+  }
+  function prethodna() {
+    if (strana - 1 > 0) {
+      setStrana(strana - 1);
+      osvezitabelu(strana - 1);
+    }
+  }
+  function sledeca() {
+    if (strana + 1 <= br_strana) {
+      setStrana(strana + 1);
+      osvezitabelu(strana + 1);
+    }
+  }
+
+  function obrisipredmet(i) {
+    setIndex(i);
+    Swal.fire({
+      title: "Da li hoćete da izbrišete predmet?",
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: "Da",
+      denyButtonText: "Ne",
+      customClass: {
+        actions: "my-actions",
+        cancelButton: "order-1 right-gap",
+        confirmButton: "order-2",
+        denyButton: "order-3",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        config5.data.predmet_id = predmeti[i].id;
+        axios(config5)
+          .then(function (response) {
+            if (response.data.code === 200) {
+              Swal.fire("Uspesno obrisan predmet", "", "success");
+            }
+            refreshPage();
+          })
+          .catch(function (error) {
+            console.log(error);
+            Swal.fire("Greška! ", "", "error");
+          });
+      } else if (result.isDenied) {
+        Swal.fire("Predmet nije obrisan", "", "info");
+      }
+    });
+  }
+
+  function azurirajpredmet(i) {
+    setIndex(i);
+    setTip("azuriraj");
+    setPrikaziformu(true);
+  }
+
+  function zatvoriformu() {
+    setPrikaziformu(false);
+  }
+
+  function novipredmet() {
+    setTip("novi");
+    zatvoriformu();
+    setIndex(-1);
+    setPrikaziformu(true);
+  }
+
+  function onSubmit(data) {
+    console.log(tip);
+    if (tip === "novi") {
+      config3.data = data;
+      axios(config3)
+        .then(function (response) {
+          if (response.data.code === 200) {
+            Swal.fire("Uspesno dodat predmet", "", "success");
+            refreshPage();
+          }
+        })
+        .catch(function (error) {
+          console.log(error);
+          Swal.fire("Greška! ", "", "error");
+        });
+    } else if (tip === "azuriraj") {
+      console.log(data);
+      config4.data = data;
+      config4.data.id = predmeti[index].id;
+      axios(config4)
+        .then(function (response) {
+          if (response.data.code === 200) {
+            Swal.fire("Uspesno azuriran predmet", "", "success");
+          }
+          osvezitabelu(strana);
+        })
+        .catch(function (error) {
+          console.log(error);
+          Swal.fire("Greška! ", "", "error");
+        });
+    }
+  }
+
+  return (
+    <div>
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} alt="banner" />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+
+      <div className="navbar">
+        <Navbar />
+      </div>
+
+      <div className="content">
+        <h1 style={{ textAlign: "center" }}>Administracija predmeta</h1>
+        <button name="novipredmet" onClick={novipredmet} className="btn btn-warning">
+          Novi predmet *
+        </button>
+        <div>
+          {predmeti ? (
+            <table className="table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Naziv</th>
+                  <th>ESPB</th>
+                  <th>Opis</th>
+                  <th>&nbsp;</th>
+                  <th>&nbsp;</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {predmeti.map((t, i) => (
+                  <tr key={i}>
+                    <td>{t.id}</td>
+                    <td>{t.naziv}</td>
+                    <td>{t.ESPB}</td>
+                    <td>{t.opis}</td>
+                    <td>
+                      <button name={i} onClick={() => azurirajpredmet(i)} type="button" className="btn btn-primary btn-sm">
+                        <GoPencil />
+                      </button>
+                    </td>
+                    <td>
+                      <button name={i} onClick={() => obrisipredmet(i)} type="button" className="btn btn-danger btn-sm">
+                        <MdDelete />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>Loading . . .</p>
+          )}
+        </div>
+        <div className="container">
+          <div className="row">
+            <div className="col d-flex justify-content-center align-items-center">
+              <Paginacija numPages={br_strana} activePage={strana} onChange={promeniStranu} next={sledeca} prev={prethodna}></Paginacija>
+            </div>
+          </div>
+        </div>
+        <br></br>
+        <br></br>
+        {prikaziformu ? <PredmetForm key={index} predmet={index > -1 ? predmeti[index] : null} onSubmit={onSubmit} onCloseClick={zatvoriformu}></PredmetForm> : " "}
+      </div>
+    </div>
+  );
+}
+
+export default AdminPredmetiPage;
