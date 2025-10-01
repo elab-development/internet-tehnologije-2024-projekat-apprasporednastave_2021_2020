@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\DanRasporeda;
+use App\Models\Raspored;
+use App\Http\Resources\DanRasporedaResource;
+use App\Http\Resources\DanRasporedaCollection;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Response;
+
+class DanRasporedaController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Request $request)
+    {
+         $validator = Validator::make($request->all(), [
+            'id' => 'required|int',
+        ]);
+        if (!$validator->fails()) 
+        {
+            return new DanRasporedaResource(DanRasporeda::find($request->id));
+        }
+    }
+
+    public function dani_za_raspored(Request $request)
+    {
+        if(auth()->user()->rola!=1)
+        {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'raspored_id' => 'required|int',
+        ]);
+        return new DanRasporedaCollection(Raspored::find($request->raspored_id)->dani);
+    }
+
+    public function idzadan(Request $request)
+    {
+            $validator = Validator::make($request->all(), [
+            'datum' => 'required|string',
+             ]);
+        return new DanRasporedaCollection(DanRasporeda::find($request->raspored_id)->dani);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Request $request)
+    {
+        //
+
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request)
+    {
+        if(auth()->user()->rola!=1)
+        {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'dan_id' => 'required|int',
+            'nastavni'=>'required|boolean',
+        ]);
+        $dan = DanRasporeda::find($request->dan_id);
+        $dan->nastavni=$request->nastavni;
+        $dan->save();
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(DanRasporeda $danRasporeda)
+    {
+        //
+    }
+}
