@@ -1,0 +1,33 @@
+import React from "react";
+import "../../style/kalendar.css";
+import KalendarKartica from "./KalendarKartica";
+import moment from "moment";
+
+function Kalendar({ raspored }) {
+  var d_poc = moment(raspored.dani[0].datum);
+  var cards = [];
+  var dani_rasporeda = raspored.dani;
+  var i = 0;
+  while (i < raspored.dani.length) {
+    dani_rasporeda = raspored.dani.slice(i, i + d_poc.daysInMonth());
+    cards.push(
+      <div class="col" key={i}>
+        <KalendarKartica
+          startDan={d_poc.toDate().getDay()}
+          maxDana={d_poc.daysInMonth()}
+          mesec={d_poc.toDate().getMonth()}
+          dani_rasporeda={dani_rasporeda}
+        ></KalendarKartica>
+      </div>
+    );
+    i += d_poc.daysInMonth();
+    d_poc.add(1, "month");
+  }
+
+  return (
+    <div className="grid">
+      <div className="row">{cards}</div>
+    </div>
+  );
+}
+export default Kalendar;
