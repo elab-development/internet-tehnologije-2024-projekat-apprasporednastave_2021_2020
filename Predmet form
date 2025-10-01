@@ -1,0 +1,106 @@
+import React from "react";
+import "../../style/forms.css";
+import { useState, useEffect } from "react";
+import { IoMdCloseCircleOutline } from "react-icons/io";
+function PredmetForm({ onSubmit, predmet, onCloseClick }) {
+  const [formData, setFormData] = useState({
+    naziv: "",
+    ESPB: "",
+    opis: "",
+    id: -1,
+  });
+
+  const [errors, setErrors] = useState("");
+  const [success, setSuccess] = useState(false);
+  useEffect(() => {
+    console.log(predmet);
+    if (predmet != null) {
+      setFormData({
+        ...formData,
+        ["naziv"]: predmet.naziv,
+        ["ESPB"]: predmet.ESPB,
+        ["opis"]: predmet.opis,
+        ["id"]: predmet.id,
+      });
+    }
+  }, []);
+  function handleInput(e) {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  }
+  const validate = () => {
+    const err = {};
+
+    if (!formData.naziv.trim()) {
+      err.naziv = "* Naziv je obavezan";
+    }
+
+    if (isNaN(formData.ESPB)) {
+      err.ESPB = "* ESPB je obavezan";
+    }
+
+    return err;
+  };
+
+  const clear = (e) => {};
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      setSuccess(true);
+      onSubmit(formData);
+    } else {
+      console.log(validationErrors);
+      setSuccess(false);
+    }
+  };
+
+  return (
+    <div className="container ctdiv">
+      <div className="float-end">
+        <button type="button" className="btn-small btn-light" onClick={onCloseClick}>
+          <IoMdCloseCircleOutline />
+        </button>
+        <br></br>
+        <br></br>
+      </div>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="naziv">Naziv</label>
+          <input name="naziv" type="text" className="form-control" id="naziv" aria-describedby="nazivHelp" placeholder="Unesite naziv" value={formData.naziv} onChange={handleInput} />
+          <small id="nazivHelp" class="form-text text-muted">
+            Naziv predmeta.
+          </small>
+          {errors.naziv && <small className="error">{errors.naziv}</small>}
+        </div>
+        <div className="form-group">
+          <label htmlFor="espb">ESPB</label>
+          <input name="ESPB" type="number" className="form-control" id="espb" aria-describedby="espbHelp" placeholder="Unesite espb" value={formData.ESPB} onChange={handleInput} />
+          <small id="espbHelp" class="form-text text-muted">
+            ESPB predmeta.
+          </small>
+          {errors.espb && <small className="error">{errors.espb}</small>}
+        </div>
+        <div className="form-group">
+          <label htmlFor="opis">opis</label>
+          <textarea name="opis" type="textarea" className="form-control" id="opis" aria-describedby="opisHelp" placeholder="Unesite opis" value={formData.opis} onChange={handleInput} rows="3"></textarea>
+          <small id="opisHelp" class="form-text text-muted">
+            opis predmeta.
+          </small>
+          {errors.opis && <small className="error">{errors.opis}</small>}
+        </div>
+        <br />
+        <br />
+        <button type="submit" className="btn btn-primary">
+          Unesi
+        </button>
+      </form>
+    </div>
+  );
+}
+export default PredmetForm;
