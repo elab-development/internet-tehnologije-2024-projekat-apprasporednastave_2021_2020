@@ -1,0 +1,207 @@
+import React from "react";
+import "../../style/home.css";
+import Navbar from "../reusable/Navbar.jsx";
+import { useState, useEffect, useMemo } from "react";
+import Paginacija from "../reusable/Paginacija.jsx";
+import axios from "axios";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+
+function AdminStudentiPage({}) {
+  var isAdmin = window.sessionStorage.getItem("role") === "1";
+  const navigate = useNavigate();
+  if (!isAdmin) {
+    navigate("/");
+  }
+  const [studenti, setStudenti] = useState(null);
+  const [opcijerasporeda, setOpcijerasporeda] = useState(null);
+  const [maxstudenata, setMaxstudenata] = useState(-1);
+  const [strana, setStrana] = useState(1);
+  const po_strani = 5;
+  const br_strana = useMemo(() => Math.ceil(maxstudenata / po_strani), [maxstudenata, po_strani]);
+  var config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/studentipg",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  var config2 = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/maxstudenata",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  var config3 = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/opcijerasporeda",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  var config4 = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/dodeliraspored",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {
+      user_id: -1,
+      raspored_id: -1,
+    },
+  };
+
+  useEffect(() => {
+    if (opcijerasporeda === null) {
+      axios(config3)
+        .then(function (response) {
+          setOpcijerasporeda(response.data.rasporedi);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+    if (maxstudenata === -1) {
+      axios(config2)
+        .then(function (response) {
+          console.log(response.data.max_stud);
+          setMaxstudenata(response.data.max_stud);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+    if (studenti === null) {
+      config.url = "http://127.0.0.1:8000/api/studentipg/" + (strana - 1) * po_strani + "/" + po_strani;
+      axios(config)
+        .then(function (response) {
+          setStudenti(response.data.studenti);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+  }, []);
+
+  function osvezitabelu(i) {
+    config.url = "http://127.0.0.1:8000/api/studentipg/" + (i - 1) * po_strani + "/" + po_strani;
+    axios(config)
+      .then(function (response) {
+        setStudenti(response.data.studenti);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
+
+  function promeniStranu(i) {
+    //console.log("Menjam stranu " + i);
+    setStrana(i);
+    osvezitabelu(i);
+  }
+  function prethodna() {
+    if (strana - 1 > 0) {
+      setStrana(strana - 1);
+      osvezitabelu(strana - 1);
+    }
+  }
+  function sledeca() {
+    if (strana + 1 <= br_strana) {
+      setStrana(strana + 1);
+      osvezitabelu(strana + 1);
+    }
+  }
+
+  function promenarasporeda(e) {
+    config4.data.user_id = parseInt(e.target.name);
+    config4.data.raspored_id = parseInt(e.target.value);
+    axios(config4)
+      .then(function (response) {
+        console.log(response);
+        if (response.data.code === 200) {
+          Swal.fire("Dodeljen raspored", "", "success");
+        }
+      })
+      .catch(function (error) {
+        Swal.fire("Nemoguće dodeliti raspored", "", "error");
+        console.log(error);
+      });
+  }
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar></Navbar>
+      </div>
+      <div className="content">
+        <h1 className="instrtext">Spisak studenata</h1>
+        <div>
+          {studenti ? (
+            <table className="table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Ime</th>
+                  <th>E-mail</th>
+                  <th>Raspored</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {studenti.map((t, i) => (
+                  <tr key={i}>
+                    <td>{t.id}</td>
+                    <td>{t.name}</td>
+                    <td>{t.email}</td>
+                    <td>
+                      <select className="form-control form-control-sm form-select" onChange={promenarasporeda} name={t.id} value={t.raspored_id ?? ""}>
+                        <option key={-1} value={null}>
+                          NIJE DODELJEN
+                        </option>
+                        {opcijerasporeda.map((k, j) => {
+                          return (
+                            <option key={j} value={k.id}>
+                              {k.naziv}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>Loading . . .</p>
+          )}
+        </div>
+        <div className="container">
+          <div className="row">
+            <div className="col d-flex justify-content-center align-items-center">
+              <Paginacija numPages={br_strana} activePage={strana} onChange={promeniStranu} next={sledeca} prev={prethodna}></Paginacija>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+export default AdminStudentiPage;
