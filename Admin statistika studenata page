@@ -1,0 +1,147 @@
+import React from "react";
+import "../../style/home.css";
+import Navbar from "../reusable/Navbar.jsx";
+import { useState, useEffect, useMemo } from "react";
+import Paginacija from "../reusable/Paginacija.jsx";
+import axios from "axios";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+
+function AdminStudentiPage({}) {
+  var isAdmin = window.sessionStorage.getItem("role") === "1";
+  const navigate = useNavigate();
+  if (!isAdmin) {
+    navigate("/");
+  }
+  const [studenti, setStudenti] = useState(null);
+  const [opcijerasporeda, setOpcijerasporeda] = useState(null);
+  const [maxstudenata, setMaxstudenata] = useState(-1);
+  const [strana, setStrana] = useState(1);
+  const po_strani = 5;
+  const br_strana = useMemo(() => Math.ceil(maxstudenata / po_strani), [maxstudenata, po_strani]);
+  var config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/studentipg",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  var config2 = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/maxstudenata",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  useEffect(() => {
+    if (maxstudenata === -1) {
+      axios(config2)
+        .then(function (response) {
+          console.log(response.data.max_stud);
+          setMaxstudenata(response.data.max_stud);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+    if (studenti === null) {
+      config.url = "http://127.0.0.1:8000/api/statistikastudenata/" + (strana - 1) * po_strani + "/" + po_strani;
+      axios(config)
+        .then(function (response) {
+          setStudenti(response.data.studenti);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+  }, []);
+
+  function osvezitabelu(i) {
+    config.url = "http://127.0.0.1:8000/api/statistikastudenata/" + (i - 1) * po_strani + "/" + po_strani;
+    axios(config)
+      .then(function (response) {
+        setStudenti(response.data.studenti);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
+
+  function promeniStranu(i) {
+    //console.log("Menjam stranu " + i);
+    setStrana(i);
+    osvezitabelu(i);
+  }
+  function prethodna() {
+    if (strana - 1 > 0) {
+      setStrana(strana - 1);
+      osvezitabelu(strana - 1);
+    }
+  }
+  function sledeca() {
+    if (strana + 1 <= br_strana) {
+      setStrana(strana + 1);
+      osvezitabelu(strana + 1);
+    }
+  }
+
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar></Navbar>
+      </div>
+      <div className="content">
+        <h1 className="instrtext">Spisak studenata</h1>
+        <div>
+          {studenti ? (
+            <table className="table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Ime</th>
+                  <th>E-mail</th>
+                  <th>Prisutan/a od</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {studenti.map((t, i) => (
+                  <tr key={i}>
+                    <td>{t.id}</td>
+                    <td>{t.name}</td>
+                    <td>{t.email}</td>
+                    <td>
+                      {t.termina_prisutan} od {t.max_termina}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>Loading . . .</p>
+          )}
+        </div>
+        <div className="container">
+          <div className="row">
+            <div className="col d-flex justify-content-center align-items-center">
+              <Paginacija numPages={br_strana} activePage={strana} onChange={promeniStranu} next={sledeca} prev={prethodna}></Paginacija>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+export default AdminStudentiPage;
