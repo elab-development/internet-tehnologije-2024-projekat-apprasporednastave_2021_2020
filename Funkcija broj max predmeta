@@ -1,0 +1,7 @@
+  public function maxpredmeta()
+    {
+        return Response::json(array(
+            'code'      =>  200,
+            'max_pred'   =>  Predmet::all()->count()
+        ), 200);
+    }
