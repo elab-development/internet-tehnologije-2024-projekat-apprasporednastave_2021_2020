@@ -1,0 +1,87 @@
+import React from "react";
+import "../../style/kalendarcard.css";
+
+function KalendarKartica({ maxDana, startDan, mesec, dani_rasporeda }) {
+  const mons = [
+    "Januar",
+    "Februar",
+    "Mart",
+    "April",
+    "Maj",
+    "Jun",
+    "Jul",
+    "Avgust",
+    "Septembar",
+    "Oktobar",
+    "Novembar",
+    "Decembar",
+  ];
+
+  var tblrows = [];
+  var tmprow = [];
+
+  if (startDan == 0) {
+    startDan = 7;
+  }
+
+  tblrows.push(
+    <tr key="hdr" className="danHdr">
+      <td>PON</td>
+      <td>UTO</td>
+      <td>SRE</td>
+      <td>ČET</td>
+      <td>PET</td>
+      <td>SUB</td>
+      <td>NED</td>
+    </tr>
+  );
+  var c_dan = 1;
+  var x = 0;
+  while (x < startDan - 1) {
+    tmprow.push(<td className="kalcell">&nbsp;</td>);
+    x++;
+  }
+  var i = 0;
+  var j = x;
+  for (i = 0, j = x; c_dan <= maxDana; i++, j++) {
+    if (j == 7) {
+      j = -1;
+      tblrows.push(<tr key={i}>{tmprow}</tr>);
+      tmprow = [];
+    } else {
+      var dan = dani_rasporeda[c_dan - 1];
+      if (dan != null) {
+        if (dan.nastavni == true) {
+          tmprow.push(
+            <td className="kalcell nastavni">
+              <a href={"mojraspored/" + dan.id} className="c_link">
+                {c_dan}
+              </a>
+            </td>
+          );
+        } else {
+          tmprow.push(<td className="kalcell nenastavni">{c_dan}</td>);
+        }
+      } else {
+        tmprow.push(<td className="kalcell">{c_dan}</td>);
+      }
+      c_dan++;
+    }
+  }
+  while (j < 7) {
+    tmprow.push(<td className="kalcell">&nbsp;</td>);
+    j++;
+  }
+  tblrows.push(<tr key={i}>{tmprow}</tr>);
+  return (
+    <div className="card h-100 kalcard">
+      <p className="kalnaslov">{mons[parseInt(mesec)]}</p>
+      <div className="card-body">
+        <table className="kaltbl">
+          <tbody>{tblrows}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+export default KalendarKartica;
