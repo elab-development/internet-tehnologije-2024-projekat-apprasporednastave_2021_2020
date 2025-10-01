@@ -1,0 +1,32 @@
+import React from "react";
+import "../../style/home.css";
+import Navbar from "../reusable/Navbar.jsx";
+
+function AboutPage() {
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar></Navbar>
+      </div>
+      <div className="content">
+        <div className="instrtext">
+          <h1>Sistem za raspored nastave</h1>
+          <p>Dobrodošli u sistem za raspored nastave!</p>
+          <p>
+            U ovom sistemu moguće je pregledati raspored časova po svakom danu
+            kao i tabelarno.
+          </p>
+          <p>
+            Takođe ako ste nastavnik/profesor ili administrator moguće je
+            kreirati nove rasporede i dodeljivati ih vašim učenicima/studentima.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+export default AboutPage;
