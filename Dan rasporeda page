@@ -1,0 +1,85 @@
+import React from "react";
+import "../../style/danrasporeda.css";
+import Navbar from "../reusable/Navbar.jsx";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import { moment } from "moment";
+
+function DanRasporedaPage() {
+  const moment = require("moment");
+  const danid = useParams();
+  console.log(danid.dan);
+  console.log(window.sessionStorage.getItem("token"));
+  var config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/terminizadan",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {
+      dan_id: parseInt(danid.dan),
+    },
+  };
+
+  const [tblrows, setTblrows] = useState(null);
+  const [termini, setTermini] = useState(null);
+  useEffect(() => {
+    if (termini === null) {
+      axios(config)
+        .then(function (response) {
+          setTermini(response.data.termini);
+
+          var xrows = [];
+          for (var i = 0; i < response.data.termini.length; i++) {
+            xrows.push(
+              <tr key={i}>
+                <td>{response.data.termini[i].pocetak}</td>
+                <td>{response.data.termini[i].kraj}</td>
+                <td>{response.data.termini[i].predmet.naziv}</td>
+              </tr>
+            );
+          }
+          setTblrows(xrows);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+  }, []);
+
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar></Navbar>
+      </div>
+      <div className="content">
+        <h1 className="hdg">Raspored za dan</h1>
+        {termini === null ? (
+          <h2></h2>
+        ) : (
+          <h2 className="hdg">
+            {moment(termini[0].dan.datum).format("D. M. Y.")}
+          </h2>
+        )}
+        <table className="rasporedTabela">
+          <thead>
+            <tr>
+              <th>Početak</th>
+              <th>Kraj</th>
+              <th>Predmet</th>
+            </tr>
+          </thead>
+          <tbody>{tblrows ?? null}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+export default DanRasporedaPage;
