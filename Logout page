@@ -1,0 +1,73 @@
+import React from "react";
+import "../../style/home.css";
+import Navbar from "../reusable/Navbar.jsx";
+import { useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+
+function LogoutPage({ addIsLoggedIn }) {
+  var isLoggedIn = window.sessionStorage.getItem("loggedIn") === "true";
+  const navigate = useNavigate();
+  function handleLogout() {
+    var config = {
+      method: "post",
+      maxBodyLength: Infinity,
+      url: "http://127.0.0.1:8000/api/logout",
+      headers: {
+        Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      },
+    };
+
+    axios(config)
+      .then(function (response) {
+        Swal.fire("Izlogovani ste", "", "success");
+        navigate("/home");
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
+
+  useEffect(() => {
+    if (isLoggedIn === true) {
+      handleLogout();
+      window.sessionStorage.setItem("loggedIn", "false");
+      isLoggedIn = false;
+      addIsLoggedIn(false);
+    } else {
+      console.log("Not logged in.");
+    }
+  }, []);
+
+  if (isLoggedIn) {
+    return (
+      <div className="">
+        <div className="banner">
+          <img src={require("../../pic/topbannerslim.jpg")} />
+          <p className="bannertxt">Sistem za raspored nastave</p>
+        </div>
+        <div className="navbar">
+          <Navbar></Navbar>
+        </div>
+        <div className="content">
+          <p>Logged out.</p>
+        </div>
+      </div>
+    );
+  } else {
+    return (
+      <div className="">
+        <div className="banner">
+          <img src={require("../../pic/topbannerslim.jpg")} />
+          <p className="bannertxt">Sistem za raspored nastave</p>
+        </div>
+        <div className="navbar">
+          <Navbar></Navbar>
+        </div>
+        <div className="content"></div>
+      </div>
+    );
+  }
+}
+export default LogoutPage;
