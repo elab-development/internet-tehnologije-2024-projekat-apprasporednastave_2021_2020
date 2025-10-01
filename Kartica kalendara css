@@ -1,0 +1,41 @@
+.kaltbl{
+        display: flex;
+        flex-grow: grow;
+        border-collapse: separate;
+        border-spacing: 0; /* Optional, to remove space between cells */
+        border-radius: 10px; /* Apply border-radius to the table */
+        overflow: hidden; /* Important for containing rounded corners */
+        border: 2px black solid;
+
+}
+.kaltbl tr td:last-child{
+        border-right:none;
+}
+.kalcell{
+        text-align: center;
+        padding:0;
+        margin:0;
+        border-top:1px black solid;
+        border-right:1px black solid;
+}
+.kalnaslov{
+        text-align: center;
+        font-size: 12pt;
+        font-weight: bold;
+
+}
+
+.kalcard{
+        align-content: center;
+        align-items: center;
+}
+
+.nastavni
+{
+        background-color: lightgreen;
+}
+
+.nenastavni
+{
+        background-color: lightyellow;
+}
