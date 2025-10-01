@@ -1,0 +1,407 @@
+import React from "react";
+import "../../style/home.css";
+import Navbar from "../reusable/Navbar.jsx";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import moment from "moment";
+import Swal from "sweetalert2";
+
+function AdminKreirajRasporedPage({}) {
+  var isAdmin = window.sessionStorage.getItem("role") === "1";
+  const navigate = useNavigate();
+  if (!isAdmin) {
+    navigate("/");
+  }
+  const [formData, setFormData] = useState({
+    pocetak_sat: 0,
+    pocetak_minut: 0,
+    kraj_sat: 0,
+    kraj_minut: 0,
+    predmet: 1,
+    dan: "",
+    danponavljanja: -1,
+  });
+
+  const [termini, setTermini] = useState([]);
+  const [predmeti, setPredmeti] = useState(null);
+  const [predmet_options, setPredmet_options] = useState(null);
+  const [trenutnitermin, setTrenutnitermin] = useState("");
+  const [nazivrasporeda, setNazivrasporeda] = useState("");
+
+  var config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/predmeti",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  var config2 = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/noviraspored",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {
+      dani: [],
+      name: "",
+    },
+  };
+
+  var config3 = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/btnovitermin",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {
+      termini: [],
+    },
+  };
+  useEffect(() => {
+    if (predmeti === null) {
+      axios(config)
+        .then(function (response) {
+          setPredmeti(response.data.predmeti);
+          var tmpoptions = [];
+          for (var i = 0; i < response.data.predmeti.length; i++) {
+            tmpoptions.push(
+              <option key={i} value={response.data.predmeti[i].id}>
+                {response.data.predmeti[i].naziv}
+              </option>
+            );
+          }
+          setPredmet_options(tmpoptions);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+  }, []);
+
+  const [posebnidatum, setPosebnidatum] = useState();
+  const [datumpocetka, setDatumpocetka] = useState();
+  const [datumkraja, setDatumkraja] = useState();
+  const [vikendisunenastavni, setVikendisunenastavni] = useState(true);
+  const [nenastavnidatum, setNenastavnidatum] = useState();
+  const [nenastavnidani, setNenastavnidani] = useState([]);
+  const [trenutninenastavnidan, setTrenutninenastavnidan] = useState();
+  const dani_u_nedelji = [
+    { k: -1, t: "Posebno" },
+    { k: 1, t: "Ponedeljkom" },
+    { k: 2, t: "Utorkom" },
+    { k: 3, t: "Sredom" },
+    { k: 4, t: "Četvrtkom" },
+    { k: 5, t: "Petkom" },
+    { k: 6, t: "Subotom" },
+    { k: 0, t: "Nedeljom" },
+  ];
+
+  function handleInput(e) {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  function pad_zero(x) {
+    if (x >= 0 && x < 10) {
+      return "0" + x;
+    } else {
+      return x;
+    }
+  }
+  function dodajTermin(e) {
+    e.preventDefault();
+    const momentt = moment(formData.dan);
+    console.log(formData.danponavljanja);
+
+    //formatiranje sata i minuta
+    var poc_s = pad_zero(formData.pocetak_sat);
+    var poc_m = pad_zero(formData.pocetak_minut) + ":00";
+    var kraj_s = pad_zero(formData.kraj_sat);
+    var kraj_m = pad_zero(formData.kraj_minut) + ":00";
+
+    var novitermin = {
+      predmet_id: formData.predmet,
+      vreme_pocetak: "1971-01-01 " + poc_s + ":" + poc_m,
+      vreme_kraj: "1971-01-01 " + kraj_s + ":" + kraj_m,
+      dan: formData.dan != "" ? formData.dan : "DEFAULT",
+      dan_u_nedelji: formData.danponavljanja,
+      label: dani_u_nedelji.find((o) => o.k == formData.danponavljanja).t + " " + (formData.danponavljanja == -1 ? "(" + momentt.format("D. M. Y.") + ") " : "") + poc_s + ":" + poc_m + " - " + kraj_s + ":" + kraj_m + " " + predmeti.find((o) => o.id === parseInt(formData.predmet)).naziv,
+    };
+    setTermini([...termini, novitermin]);
+  }
+
+  function izbrisitermin() {
+    setTermini((prev) => prev.filter((_, i) => i !== trenutnitermin));
+  }
+
+  function promeninazivrasporeda(e) {
+    setNazivrasporeda(e.target.value);
+  }
+
+  function handledatumpocetkachange(e) {
+    setDatumpocetka(e.target.value);
+  }
+
+  function handledatumkrajachange(e) {
+    setDatumkraja(e.target.value);
+  }
+
+  function handlenenastavnidatumchange(e) {
+    setNenastavnidatum(e.target.value);
+  }
+
+  function dodajnd(e) {
+    console.log(e.target.value);
+    if (nenastavnidatum && !nenastavnidani.includes(nenastavnidatum)) {
+      setNenastavnidani((prev) => [...prev, nenastavnidatum]);
+    }
+  }
+  function uklonind() {
+    setNenastavnidani((prev) => prev.filter((_, i) => i !== trenutninenastavnidan));
+  }
+
+  function kreirajraspored() {
+    var d_poc = moment(datumpocetka);
+    var d_kraj = moment(datumkraja);
+    var dani = [];
+    console.log(nenastavnidani);
+    for (; d_poc <= d_kraj; d_poc.add(1, "day")) {
+      var t_nastavni = 1;
+      if (nenastavnidani.includes(d_poc.format("YYYY-MM-DD")) || ((d_poc.day() == 0 || d_poc.day() == 6) && vikendisunenastavni == true)) {
+        t_nastavni = 0;
+      }
+
+      if (termini.find((o) => o.dan_u_nedelji === -1 && o.dan === d_poc.format("YYYY-MM-DD")) != null) {
+        t_nastavni = 1;
+      }
+      dani.push({ datum: d_poc.format("YYYY-MM-DD"), nastavni: t_nastavni });
+    }
+
+    config2.data.dani = dani;
+    config2.data.name = nazivrasporeda;
+    var raspored_id = -1;
+    var success = true;
+    var greska = null;
+    var termini2 = [];
+    axios(config2)
+      .then(function (response) {
+        raspored_id = response.data.id;
+        var dani_id = response.data.dani;
+        for (var i = 0; i < dani_id.length; i++) {
+          var d = dani[i];
+          //Za sve dane u nedelji
+
+          if (d.nastavni == true) {
+            var t = termini.filter((o) => o.dan_u_nedelji === moment(d.datum).day() + "");
+            for (var j = 0; j < t.length; j++) {
+              var nt = {};
+              nt.dan_id = dani_id[i];
+              nt.predmet_id = t[j].predmet_id;
+              nt.vreme_pocetak = t[j].vreme_pocetak;
+              nt.vreme_kraj = t[j].vreme_kraj;
+              termini2.push(nt);
+            }
+          } else if (termini.find((o) => o.dan_u_nedelji === "-1" && o.dan === moment(d.datum).format("YYYY-MM-DD"))) {
+            var t = termini.filter((o) => o.dan_u_nedelji === "-1" && o.dan === moment(d.datum).format("YYYY-MM-DD"));
+            for (var j = 0; j < t.length; j++) {
+              var nt = {};
+              nt.dan_id = dani_id[i];
+              nt.predmet_id = t[j].predmet_id;
+              nt.vreme_pocetak = t[j].vreme_pocetak;
+              nt.vreme_kraj = t[j].vreme_kraj;
+              termini2.push(nt);
+            }
+          }
+        }
+        config3.data.termini = termini2;
+        console.log(termini2);
+        console.log(termini);
+        axios(config3)
+          .then(function (response) {})
+          .catch(function (error) {
+            greska = error;
+            success = false;
+            console.log(error);
+          });
+      })
+      .catch(function (error) {
+        console.log(error);
+        greska = error;
+        success = false;
+      });
+    if (success) {
+      Swal.fire("Uspešno kreiran raspored", "", "success");
+    } else {
+      Swal.fire("Raspored nije kreiran!\nGreška: " + greska, "", "error");
+    }
+  }
+
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar></Navbar>
+      </div>
+      <div className="content">
+        <div className="container border border-secondary rounded-2">
+          <br></br>
+          <br></br>
+          <h1 className="instrtext">Kreiranje rasporeda</h1>
+          <form className="form">
+            <div className="form-group">
+              <label for="terminispisak">Termini:</label>
+              <select id="terminispisak" multiple className="form-control" value={[trenutnitermin]} onChange={(e) => setTrenutnitermin(parseInt(e.target.value, 10))}>
+                {termini.map((t, i) => (
+                  <option key={i} value={i}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+              <br />
+              <input type="button" className="btn btn-danger" value="Ukloni termin" onClick={izbrisitermin} />
+              <br />
+              <br></br>
+              <label htmlFor="nazivrasporeda">Naziv rasporeda:&nbsp;</label>
+              <input id="nazivrasporeda" type="text" value={nazivrasporeda} onInput={promeninazivrasporeda}></input>
+              <br></br>
+              <br></br>
+              <label for="datumpocetka">Datum od:</label>
+              <input id="datumpocetka" onChange={handledatumpocetkachange} class="form-control" type="date" />
+              <label for="datumkraja">Datum do:</label>
+              <input id="datumkraja" onChange={handledatumkrajachange} class="form-control" type="date" />
+            </div>
+            <br></br>
+            <div className="form-group">
+              <label for="nenastavnidanispisak">Nenastavni dani:</label>
+              <select id="nenastavnidanispisak" multiple className="form-control" value={[trenutninenastavnidan]} onChange={(e) => setTrenutninenastavnidan(parseInt(e.target.value, 10))}>
+                {nenastavnidani.map((t, i) => (
+                  <option key={i} value={i}>
+                    {moment(t).format("D. M. Y.")}
+                  </option>
+                ))}
+              </select>
+              <br></br>
+              <table>
+                <tbody>
+                  <tr>
+                    <td>
+                      <label for="nenastavnidatum">Nenastavni dan:</label>
+                    </td>
+                    <td>
+                      <input id="nenastavnidatum" onChange={handlenenastavnidatumchange} class="form-control" type="date" value={nenastavnidatum} />
+                    </td>
+                    <td>
+                      <input type="button" className="btn btn-success" value="+" onClick={dodajnd} />
+                    </td>
+                    <td>
+                      <input type="button" className="btn btn-danger" value="-" onClick={uklonind} />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <br></br>
+              <label for="nenastavnivikendi" className="form-check-label">
+                Vikendi su nenastavni &nbsp;
+              </label>
+              <input type="checkbox" className="form-check-input" id="nenastavnivikendi" checked={vikendisunenastavni} onChange={() => setVikendisunenastavni(!vikendisunenastavni)}></input>
+            </div>
+            <br></br>
+            <br></br>
+            <input type="button" className="btn btn-success" value="Kreiraj raspored" onClick={kreirajraspored}></input>
+          </form>
+          <br></br>
+        </div>
+        <br></br>
+        <br></br>
+        <br></br>
+        <h2 className="instrtext">Kreiranje termina:</h2>
+        <div className="container ctdiv">
+          <form onSubmit={dodajTermin}>
+            <div className="form-group">
+              <label htmlFor="predmet">Predmet: </label>
+              <br></br>
+              <br></br>
+              <select id="predmet" className="form-control form-control-lg form-select" value={formData.predmet} onChange={handleInput} name="predmet">
+                {predmet_options ?? null}
+              </select>
+              <br></br>
+              <br></br>
+              <table>
+                <tbody>
+                  <tr>
+                    <td>Početak:&nbsp;</td>
+                    <td>
+                      <input type="number" className="form-control" id="psat" min="0" max="23" step="1" defaultValue="00" name="pocetak_sat" value={formData.pocetak_sat} onInput={handleInput}></input>
+                    </td>
+                    <td>&nbsp;:&nbsp;</td>
+                    <td>
+                      <input type="number" className="form-control" id="pminut" min="0" max="59" step="1" defaultValue="00" name="pocetak_minut" value={formData.pocetak_minut} onInput={handleInput}></input>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <br></br>
+              <table>
+                <tbody>
+                  <tr>
+                    <td>Kraj:&nbsp;</td>
+                    <td>
+                      <input type="number" className="form-control" id="ksat" min="0" max="23" step="1" defaultValue="00" name="kraj_sat" value={formData.kraj_sat} onInput={handleInput}></input>
+                    </td>
+                    <td>&nbsp;:&nbsp;</td>
+                    <td>
+                      <input type="number" className="form-control" id="kminut" min="0" max="59" step="1" defaultValue="00" name="kraj_minut" value={formData.kraj_minut} onInput={handleInput}></input>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <br />
+              <label htmlFor="ponavljanje">Ponavlja se:&nbsp;</label>
+              <select id="ponavljanje" name="danponavljanja" onChange={handleInput} value={formData.danponavljanja}>
+                {dani_u_nedelji.map((t, i) => (
+                  <option key={i} value={t.k}>
+                    {t.t}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {formData.danponavljanja == -1 ? (
+              <div>
+                <label for="dan">Datum:</label>
+                <input id="dan" onChange={handleInput} class="form-control" type="date" name="dan" value={formData.dan} />
+              </div>
+            ) : (
+              <></>
+            )}
+            <br></br>
+            <input type="submit" className="btn btn-light" value="Dodaj termin"></input>
+          </form>
+        </div>
+        <br></br>
+        <br></br>
+        <br></br>
+        <br></br>
+        <br></br>
+        <br></br>
+        <br></br>
+        <br></br>
+        <br></br>
+      </div>
+    </div>
+  );
+}
+export default AdminKreirajRasporedPage;
