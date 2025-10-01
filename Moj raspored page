@@ -1,0 +1,57 @@
+import LoginForm from "../reusable/LoginForm.jsx";
+import Navbar from "../reusable/Navbar.jsx";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import KalendarKartica from "../reusable/KalendarKartica.jsx";
+import Kalendar from "../reusable/Kalendar.jsx";
+
+function MojRasporedPage() {
+  const [raspored, setRaspored] = useState(null);
+  const navigate = useNavigate();
+  var config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/mojraspored",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  useEffect(() => {
+    if (raspored === null) {
+      axios
+        .get("http://127.0.0.1:8000/api/mojraspored", config)
+        .then((response) => {
+          console.log(response.data);
+          setRaspored(response.data.data);
+        })
+        .catch(function (error) {
+          if (error.status === 404) {
+            Swal.fire("Nije vam dodeljen raspored.\nObratite se administratoru.", "", "info");
+            navigate("/home");
+          } else {
+            console.log(error);
+          }
+        });
+    }
+  }, []);
+
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar isLoggedIn={Boolean(window.sessionStorage.getItem("loggedIn"))}></Navbar>
+      </div>
+      <div className="content">{raspored ? <Kalendar raspored={raspored}></Kalendar> : <h1>Loading. . .</h1>}</div>
+      <br></br>
+    </div>
+  );
+}
+export default MojRasporedPage;
