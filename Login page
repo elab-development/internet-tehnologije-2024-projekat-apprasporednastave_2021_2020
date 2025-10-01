@@ -1,0 +1,50 @@
+import LoginForm from "../reusable/LoginForm.jsx";
+import Navbar from "../reusable/Navbar.jsx";
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+
+function LoginPage({ addToken, addUser, addIsLoggedIn }) {
+  const navigate = useNavigate();
+
+  function handleLogin(data) {
+    console.log("handleLogin called with:", data);
+    axios
+      .post("http://127.0.0.1:8000/api/login", data)
+      .then((res) => {
+        console.log("Login response:", res.data);
+        if (res.data.code === 200) {
+          addToken(res.data.access_token);
+          window.sessionStorage.setItem("token", res.data.access_token);
+          addIsLoggedIn(true);
+          window.sessionStorage.setItem("loggedIn", "true");
+          window.sessionStorage.setItem("role", res.data.role);
+          navigate("/home");
+        }
+      })
+      .catch(() => {
+        Swal.fire("Unable to login", "", "error");
+      });
+  }
+
+  return (
+    <div>
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} alt="banner" />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+
+      <div className="navbar">
+        <Navbar />
+      </div>
+
+      <div className="content">
+        <h1 style={{ textAlign: "center" }}>Log in</h1>
+        <LoginForm onLogin={handleLogin} />
+      </div>
+    </div>
+  );
+}
+
+export default LoginPage;
