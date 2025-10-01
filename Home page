@@ -1,0 +1,46 @@
+import React from "react";
+import "../../style/home.css";
+import Navbar from "../reusable/Navbar.jsx";
+import WeatherWidget from "../reusable/WeatherWidget.jsx";
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+function HomePage({}) {
+  console.log(window.sessionStorage);
+  const api = {
+    key: "9027a17e9a6ed2f18f6586b3d3a286f0",
+    base: "https://api.openweathermap.org/data/2.5/",
+  };
+
+  const [weather, setWeather] = useState(null);
+
+  useEffect(() => {
+    fetch(`${api.base}weather?q=Belgrade&units=metric&APPID=${api.key}`)
+      .then((res) => res.json())
+      .then((result) => {
+        setWeather(result);
+        console.log(result);
+      });
+  }, []);
+
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar></Navbar>
+      </div>
+      <div className="content">
+        <h1 className="instrtext">Dobrodošli!</h1>
+        <br></br>
+        <br></br>
+        <br></br>
+        <h2 className="instrtext">Vreme danas</h2>
+        <div className="col-1 justify-content-center mx-auto">{weather === null ? " " : <WeatherWidget vreme={weather}></WeatherWidget>}</div>
+      </div>
+    </div>
+  );
+}
+export default HomePage;
