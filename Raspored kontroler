@@ -1,0 +1,169 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use DateTime;
+use App\Models\Raspored;
+use App\Models\DanRasporeda;
+use App\Models\User;
+use Response;
+use App\Http\Resources\RasporedResource;
+use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Relations;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+
+class RasporedController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name'=>'required|string',
+            'dani'=>'required|array',
+            'dani.*.datum'=>'required|string',
+            'dani.*.nastavni'=>'required|int'
+        ]);
+
+        $r = new Raspored();
+        $r->naziv=$request->name;
+        $r->save();
+        $id_dana=[];
+        if(!$validator->fails()) 
+        {
+            $dani=$request->dani;
+            for($i = 0;$i < count($dani);$i++) 
+            {
+                $d = new DanRasporeda();
+                $d->raspored_id = $r->id;
+                $d->datum = DateTime::createFromFormat('Y-m-d', $dani[$i]['datum'])->format('Y-m-d');
+        
+                if($dani[$i]['nastavni']==0)
+                {
+                    $d->nastavni = false;
+                }
+                else
+                {
+                    $d->nastavni=true;
+                }
+                $d->save();
+                $id_dana[]=$d->id;
+            }
+
+            return Response::json(array(
+                'code' => 200,
+                'message' => "Raspored uspesno kreiran.",
+                'id'=>$r->id,
+                'dani'=>$id_dana
+            ), 200);
+        } else {
+            return Response::json(array(
+                'code' => 400,
+                'message' => $validator->errors(),
+            ), 400);
+        }
+
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+
+            return new RasporedResource(Raspored::find($id));
+    }
+
+    public function rasporedza($korisnik_id)
+    {
+        return new RasporedResource(User::find($korisnik_id)->raspored);
+    }
+
+    public function mojraspored()
+    {
+        if(auth()->user()->raspored==null)
+        {
+            return Response::json(array('data'=>null,'code'=>404),404);
+        }
+        return Response::json(array('data'=>new RasporedResource(auth()->user()->raspored),'code'=>200),200);
+    }
+
+    public function dodeliraspored(Request $request)
+    {
+        if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|int',
+            'raspored_id'=>'required|int'
+        ]);
+        $student = User::find($request->user_id);
+        $student->raspored_id=$request->raspored_id;
+        $student->save();
+        return Response::json(array(
+                'code' => 200,
+                'message' => "Uspesno dodeljen raspored.",
+            ), 200);
+
+    }
+
+    public function opcijerasporeda()
+    {
+        return Response::json([
+    'rasporedi' => Raspored::all(['id','naziv'])
+], 200);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Raspored $raspored)
+    {
+
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Raspored $raspored)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Raspored $raspored)
+    {
+        //
+    }
+}
