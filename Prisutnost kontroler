@@ -1,0 +1,148 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Prisutnost;
+use App\Models\Termin;
+use App\Models\User;
+use App\Models\Raspored;
+use App\Models\DanRasporeda;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Response;
+use DateTime;
+
+class PrisutnostController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Prisutnost $prisutnost)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Prisutnost $prisutnost)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Prisutnost $prisutnost)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Prisutnost $prisutnost)
+    {
+        //
+    }
+
+    public function statistika_studenta(Request $request)
+    {
+         if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+        ]);
+
+        return Response::json(
+            array('termini'=>
+            Termin::whereIn('id',
+            Prisutnost::where('student',$request->user_id)->pluck('termin'))->get(),
+            'max_termina'=>
+            Termin::whereIn('dan',
+            Raspored::find(
+                User::find($request->user_id)->raspored_id)->dani->pluck('id')
+                )->count()),200);
+    }
+
+    public function statistika_termina(Request $request)
+    {
+                 if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'termin_id' => 'required|integer',
+        ]);
+
+        return Response::json(array('studenti'=>User::whereIn('id',Prisutnost::all('student'))->get(),'maxstudenata'=>User::where('rola',0)->count()),200);
+    }
+
+    public function statistikasvihtermina($raspored)
+    {
+        if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $termini = Termin::whereIn('dan',DanRasporeda::where('raspored_id',Raspored::find($raspored)->id)->pluck('id'))->get();
+        
+        for($i=0;$i<count($termini);$i++)
+        {
+            $termini[$i]->prisutno=Prisutnost::where('termin',$termini[$i]->id)->count();
+            $datum = DateTime::createFromFormat('Y-m-d', DanRasporeda::where('id',$termini[$i]->dan)->pluck('datum')[0])->format('d. m. Y.'); 
+            $termini[$i]->datum_vreme = $datum." ".$termini[$i]->pocetak."-".$termini[$i]->kraj;
+
+        }
+        return Response::json(array('termini'=>$termini,'maxstudenata'=>User::where('rola',0)->where('raspored_id',$raspored)->count()),200);
+    }
+
+    public function prijavi_prisutnost(Request $request)
+    {
+         $validator = Validator::make($request->all(), [
+            'termin_id'=>'required|integer'
+        ]);
+
+        $p = new Prisutnost();
+        $p->termin=$request->termin_id;
+        $p->student=auth()->user()->id;
+        $p->save();
+
+        return Response::json(array('message'=>'Uspesno prijavljena prisutnost.','code'=>200),200);
+    }
+}
