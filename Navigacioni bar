@@ -1,0 +1,159 @@
+import React from "react";
+import "../../style/home.css";
+import { NavLink } from "react-router-dom";
+
+function Navbar() {
+  var isLoggedIn = window.sessionStorage.getItem("loggedIn") === "true";
+  //console.log("Am I logged in (navbar) ? : " + isLoggedIn);
+  //console.log("rola : " + window.sessionStorage.getItem("role"));
+  var isAdmin = window.sessionStorage.getItem("role") === "1";
+  if (isLoggedIn && !isAdmin) {
+    return (
+      <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <a className="navbar-brand blogo" href="#">
+          <img src={require("../../pic/time-small-32.png")} />
+        </a>
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ntogg" aria-controls="ntogg" aria-expanded="false" aria-label="Toggle navigation">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="ntogg">
+          <ul className="navbar-nav mr-auto mt-2 mt-lg-0">
+            <li className="nav-item active">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/home">
+                Home
+              </NavLink>
+            </li>
+            <li className="nav-item active">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/mojprofil">
+                Moj Profil
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/logout">
+                Log out
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/mojraspored">
+                Moj Raspored
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/prijaviprisustvo">
+                Prijavi prisustvo
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/about">
+                About
+              </NavLink>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    );
+  } else if (isLoggedIn && isAdmin) {
+    return (
+      <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <a className="navbar-brand blogo" href="#">
+          <img src={require("../../pic/time-small-32.png")} />
+        </a>
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ntogg" aria-controls="ntogg" aria-expanded="false" aria-label="Toggle navigation">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="ntogg">
+          <ul className="navbar-nav mr-auto mt-2 mt-lg-0">
+            <li className="nav-item active">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/home">
+                Home
+              </NavLink>
+            </li>
+            <li className="nav-item active">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/mojprofil">
+                Moj Profil
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/logout">
+                Log out
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/kreirajraspored">
+                Kreiraj raspored
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/spisakstudenata">
+                Spisak studenata
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/spisakpredmeta">
+                Administracija predmeta
+              </NavLink>
+            </li>
+            <li className="nav-item dropdown">
+              <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Statistika
+              </a>
+              <div className="dropdown-menu" aria-labelledby="navbarDropdown">
+                <NavLink className="dropdown-item" activeClassName="nav-link-active" to="/statistikastudenata">
+                  Studenti
+                </NavLink>
+                <NavLink className="dropdown-item" activeClassName="nav-link-active" to="/statistikatermina">
+                  Termini
+                </NavLink>
+              </div>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/about">
+                About
+              </NavLink>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    );
+  } else {
+    return (
+      <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <a className="navbar-brand blogo" href="#">
+          <img src={require("../../pic/time-small-32.png")} />
+        </a>
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ntogg" aria-controls="ntogg" aria-expanded="false" aria-label="Toggle navigation">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="ntogg">
+          <ul className="navbar-nav mr-auto mt-2 mt-lg-0">
+            <li className="nav-item active">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/home">
+                Home
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/login">
+                Log in
+              </NavLink>
+            </li>
+
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/register">
+                Register
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" activeClassName="nav-link-active" to="/about">
+                About
+              </NavLink>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    );
+  }
+}
+export default Navbar;
