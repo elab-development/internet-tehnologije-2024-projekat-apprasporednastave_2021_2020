@@ -1,0 +1,15 @@
+ public function statistika_termina(Request $request)
+    {
+                 if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'termin_id' => 'required|integer',
+        ]);
+
+        return Response::json(array('studenti'=>User::whereIn('id',Prisutnost::all('student'))->get(),'maxstudenata'=>User::where('rola',0)->count()),200);
+    }
