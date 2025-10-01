@@ -1,0 +1,115 @@
+import React from "react";
+import "../../style/home.css";
+import Navbar from "../reusable/Navbar.jsx";
+import { useState, useEffect, useMemo } from "react";
+import axios from "axios";
+import Swal from "sweetalert2";
+import Histogram from "../reusable/Histogram.jsx";
+import { useNavigate } from "react-router-dom";
+
+function AdminStatistikaTerminaPage({}) {
+  var isAdmin = window.sessionStorage.getItem("role") === "1";
+  const navigate = useNavigate();
+  if (!isAdmin) {
+    navigate("/");
+  }
+  const [termini, setTermini] = useState(null);
+  const [opcijerasporeda, setOpcijerasporeda] = useState(null);
+  const [izabranaOpcija, setIzabranaOpcija] = useState(null);
+
+  var config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/statistikasvihtermina/",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  var config3 = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/opcijerasporeda",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  useEffect(() => {
+    if (opcijerasporeda === null) {
+      axios(config3)
+        .then(function (response) {
+          setOpcijerasporeda(response.data.rasporedi);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
+  }, []);
+  function handleInput(e) {
+    setIzabranaOpcija(e.target.value);
+  }
+
+  function submitForm(e) {
+    e.preventDefault();
+    config.url = "http://127.0.0.1:8000/api/statistikasvihtermina/" + izabranaOpcija;
+    axios(config)
+      .then(function (response) {
+        setTermini(response.data.termini);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar></Navbar>
+      </div>
+      <div className="content">
+        <h1 className="instrtext">Statistika termina</h1>
+        <br></br>
+        <form className="form" onSubmit={submitForm}>
+          <br></br>
+          {opcijerasporeda == null ? (
+            ""
+          ) : (
+            <div className="container">
+              <label for="predmet">Raspored:</label>
+              <select id="raspored" className="form-control form-control-sm form-select" value={izabranaOpcija} onChange={handleInput} name="raspored">
+                {opcijerasporeda.map((t, i) => (
+                  <option key={i} value={t.id}>
+                    {t.naziv}
+                  </option>
+                ))}
+              </select>
+              <br></br>
+              <input type="submit" className="btn btn-primary" value="Izaberi termin"></input>
+            </div>
+          )}
+        </form>
+        <div>
+          {termini ? <Histogram termini={termini}></Histogram> : ""}
+          <br></br>
+          <br></br>
+          <br></br>
+          <br></br>
+          <br></br>
+          <br></br>
+          <br></br>
+          <br></br>
+          <br></br>
+        </div>
+      </div>
+    </div>
+  );
+}
+export default AdminStatistikaTerminaPage;
