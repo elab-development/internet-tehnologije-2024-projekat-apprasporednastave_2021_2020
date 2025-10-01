@@ -1,0 +1,111 @@
+import React from "react";
+import "../../style/forms.css";
+import { useState } from "react";
+
+function RegisterForm({ onRegister }) {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confpassword: "",
+  });
+
+  const [errors, setErrors] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  function handleInput(e) {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  }
+  const validate = () => {
+    const err = {};
+
+    if (!formData.name.trim()) {
+      err.name = "* Name is required";
+    }
+    if (!formData.password.trim()) {
+      err.password = "* Password is required";
+    }
+
+    if (!formData.confpassword.trim()) {
+      err.confpassword = "* Must confirm password";
+    }
+    if (formData.confpassword.trim() && formData.password.trim()) {
+      if (formData.password !== formData.confpassword) {
+        err.confpassword = "* Passwords must match";
+      }
+    }
+
+    if (!formData.email.trim()) {
+      err.email = "* Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      err.email = "* Email format is invalid";
+    }
+
+    return err;
+  };
+
+  const clear = (e) => {};
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    console.log(validationErrors);
+    if (Object.keys(validationErrors).length === 0) {
+      setSuccess(true);
+      if (onRegister) {
+        setSuccess(true);
+        onRegister(formData);
+      }
+    } else {
+      setSuccess(false);
+    }
+  };
+
+  return (
+    <div className="container ctdiv">
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="username">Username</label>
+          <input name="name" type="text" className="form-control" id="username" aria-describedby="usernameHelp" placeholder="Input username" value={formData.name} onChange={handleInput} />
+          <small id="usernameHelp" className="form-text text-muted">
+            Username goes here
+          </small>
+          {errors.name && <small className="error">{errors.name}</small>}
+        </div>
+        <div className="form-group">
+          <label htmlFor="mail">Email address</label>
+          <input name="email" type="email" className="form-control" id="mail" aria-describedby="emailHelp" placeholder="Input e-mail" value={formData.email} onChange={handleInput} />
+          <small id="emailHelp" className="form-text text-muted">
+            Must be a valid e-mail.
+          </small>
+          {errors.email && <small className="error">{errors.email}</small>}
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input name="password" type="password" className="form-control" id="password" placeholder="Password" value={formData.password} onChange={handleInput} />
+          {errors.password && <small className="error">{errors.password}</small>}
+        </div>
+        <div className="form-group">
+          <label htmlFor="passwordrepeat">Password</label>
+          <input name="confpassword" type="password" className="form-control" id="passwordrepeat" placeholder="Repeat password" aria-describedby="pwdHelp" value={formData.confpassword} onChange={handleInput} />
+          <small id="pwdHelp" className="form-text text-muted">
+            Must match original password.
+          </small>
+          {errors.confpassword && <small className="error">{errors.confpassword}</small>}
+        </div>
+        <br />
+        <br />
+        {success && <p className="success">Successfully registered!</p>}
+        <br />
+        <button type="submit" className="btn btn-primary">
+          Register
+        </button>
+      </form>
+    </div>
+  );
+}
+export default RegisterForm;
