@@ -1,0 +1,27 @@
+import React from "react";
+import "../../style/weather.css";
+
+function WeatherWidget({ vreme }) {
+  console.log(vreme);
+  return (
+    <div>
+      <table className="tblzavreme">
+        <tbody>
+          <tr>
+            <td>
+              <img src={"https://openweathermap.org/img/wn/" + vreme.weather[0].icon + "@2x.png"} />
+            </td>
+            <td>{vreme.main.temp}</td>
+            <td>{"°C"}</td>
+          </tr>
+          <tr>
+            <td>Beograd</td> <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+            <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default WeatherWidget;
