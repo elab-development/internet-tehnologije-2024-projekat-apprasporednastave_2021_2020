@@ -1,0 +1,45 @@
+import LoginForm from "../reusable/LoginForm.jsx";
+import Navbar from "../reusable/Navbar.jsx";
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import RegisterForm from "../reusable/RegisterForm.jsx";
+
+function RegisterPage({}) {
+  function handleLogin(data) {
+    axios
+      .post("http://127.0.0.1:8000/api/register", data)
+      .then((res) => {
+        console.log(res.data.logged_user);
+        if (res.data.code === 200) {
+          Swal.fire("Uspešno ste se registrovali!", "", "success");
+        }
+      })
+      .catch((e) => {
+        Swal.fire("Unable to register!", "", "error");
+        console.log(e);
+      });
+  }
+
+  function hlg(data) {
+    console.log(data);
+  }
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar></Navbar>
+      </div>
+      <div className="content">
+        <h1 style={{ textAlign: "center" }}>Register a new account</h1>
+        <br />
+        <RegisterForm onRegister={handleLogin}></RegisterForm>
+      </div>
+    </div>
+  );
+}
+export default RegisterPage;
