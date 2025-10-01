@@ -1,0 +1,98 @@
+import React from "react";
+import "../../style/forms.css";
+import { useState } from "react";
+
+function LoginForm({ onLogin }) {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [errors, setErrors] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  function handleInput(e) {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  }
+  const validate = () => {
+    const err = {};
+
+    if (!formData.password.trim()) {
+      err.password = "* Password is required";
+    }
+
+    if (!formData.email.trim()) {
+      err.email = "* Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      err.email = "* Email format is invalid";
+    }
+    return err;
+  };
+
+  const clear = (e) => {};
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      setSuccess(true);
+      onLogin(formData);
+    } else {
+      setSuccess(false);
+    }
+  };
+
+  return (
+    <div className="container ctdiv">
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="mail">Email address</label>
+          <input
+            name="email"
+            type="email"
+            className="form-control"
+            id="mail"
+            aria-describedby="emailHelp"
+            placeholder="Input e-mail"
+            value={formData.email}
+            onChange={handleInput}
+          />
+          <small id="emailHelp" class="form-text text-muted">
+            Must be a valid e-mail.
+          </small>
+          {errors.email && <small className="error">{errors.email}</small>}
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            name="password"
+            type="password"
+            className="form-control"
+            id="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleInput}
+          />
+          {errors.password && (
+            <small className="error">{errors.password}</small>
+          )}
+        </div>
+        <br />
+        {success && <p className="success">Successfully logged in!</p>}
+        {!success && errors.length > 0 && (
+          <p className="error">Error logging in!</p>
+        )}
+        <br />
+        <button type="submit" className="btn btn-primary">
+          Log in
+        </button>
+      </form>
+    </div>
+  );
+}
+export default LoginForm;
