@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations;
+
+class Raspored extends Model
+{
+    /** @use HasFactory<\Database\Factories\RasporedFactory> */
+    use HasFactory;
+    protected $table="raspored";
+    protected $fillable=['naziv'];
+    public function studenti()
+    {
+        return $this->belongsToMany(User::class);
+    }
+
+    public function dani()
+    {
+        return $this->hasMany(DanRasporeda::class);
+    }
+
+
+}
