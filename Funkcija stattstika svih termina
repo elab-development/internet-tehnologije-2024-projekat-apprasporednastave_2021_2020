@@ -1,0 +1,20 @@
+public function statistikasvihtermina($raspored)
+    {
+        if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $termini = Termin::whereIn('dan',DanRasporeda::where('raspored_id',Raspored::find($raspored)->id)->pluck('id'))->get();
+        
+        for($i=0;$i<count($termini);$i++)
+        {
+            $termini[$i]->prisutno=Prisutnost::where('termin',$termini[$i]->id)->count();
+            $datum = DateTime::createFromFormat('Y-m-d', DanRasporeda::where('id',$termini[$i]->dan)->pluck('datum')[0])->format('d. m. Y.'); 
+            $termini[$i]->datum_vreme = $datum." ".$termini[$i]->pocetak."-".$termini[$i]->kraj;
+
+        }
+        return Response::json(array('termini'=>$termini,'maxstudenata'=>User::where('rola',0)->where('raspored_id',$raspored)->count()),200);
+    }

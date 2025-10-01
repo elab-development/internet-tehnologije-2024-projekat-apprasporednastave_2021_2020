@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations;
+
+class DanRasporeda extends Model
+{
+    /** @use HasFactory<\Database\Factories\DanRasporedaFactory> */
+    use HasFactory;
+
+    protected $fillable = ['datum','nastavni','ponavlja_se'];
+
+    protected $table='dan_rasporeda';
+
+    public function raspored()
+    {
+        $this->belongsTo(Raspored::class);
+    }
+
+}

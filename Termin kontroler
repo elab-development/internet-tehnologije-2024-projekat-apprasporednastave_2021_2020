@@ -1,0 +1,192 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use DateTime;
+use App\Models\Termin;
+use App\Http\Resources\TerminCollection;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Response;
+
+class TerminController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'dan_id' => 'required|integer',
+            'vreme_pocetak' => 'required|string',
+            'vreme_kraj' => 'required|string',
+            'predmet_id' => 'required|integer'
+
+        ]);
+        if(!$validator->fails()) {
+            $t = new Termin();
+            $t->dan = $request->dan_id;
+            $t->pocetak = DateTime::createFromFormat('Y-m-d H:i:s', $request->vreme_pocetak)->format('Y-m-d H:i:s');
+            $t->kraj = DateTime::createFromFormat('Y-m-d H:i:s', $request->vreme_kraj)->format('Y-m-d H:i:s');
+            $t->predmet = $request->predmet_id;
+            $t->save();
+            return Response::json(array(
+                'code' => 200,
+                'message' => "Termin uspesno kreiran.",
+            ), 200);
+        } else {
+
+            return Response::json(array(
+                'code' => 400,
+                'message' => $validator->errors(),
+            ), 400);
+
+        }
+    }
+
+    public function btnovitermin(Request $request)
+    {
+                if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'termini'=>'required|array',
+            'termini.*.dan_id' => 'required|integer',
+            'termini.*.vreme_pocetak' => 'required|string',
+            'termini.*.vreme_kraj' => 'required|string',
+            'termini.*.predmet_id' => 'required|integer'
+
+        ]);
+        if(!$validator->fails()) {
+            $i=0;
+            for($j=0;$j<count($request->termini);$j++)
+            {
+            $t = new Termin();
+            $t->dan = $request->termini[$j]['dan_id'];
+            $t->pocetak = DateTime::createFromFormat('Y-m-d H:i:s', $request->termini[$j]['vreme_pocetak'])->format('Y-m-d H:i:s');
+            $t->kraj = DateTime::createFromFormat('Y-m-d H:i:s', $request->termini[$j]['vreme_kraj'])->format('Y-m-d H:i:s');
+            $t->predmet = $request->termini[$j]['predmet_id'];
+            $t->save();
+            $i++;
+            }
+            return Response::json(array(
+                'code' => 200,
+                'message' => "Uspesno kreirano ".$i." termina.",
+            ), 200);
+        } else {
+
+            return Response::json(array(
+                'code' => 400,
+                'message' => $validator->errors(),
+            ), 400);
+
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Termin $Termin)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Request $request)
+    {
+
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request)
+    {
+        if(auth()->user()->role != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'termin_id' => 'required|integer',
+            'vreme_pocetak' => 'required|string',
+            'vreme_kraj' => 'required|string',
+            'predmet_id' => 'required|integer'
+
+        ]);
+        if(!$validator->fails()) {
+            $t = Termin::find($request->termin_id);
+            $t->dan = $request->dan_id;
+            $t->pocetak = strtotime($request->vreme_pocetak);
+            $t->kraj = strtotime($request->vreme_kraj);
+            $t->predmet = $request->predmet_id;
+            $t->update();
+
+            return Response::json(array(
+                'code' => 200,
+                'message' => "Termin uspesno izmenjen.",
+            ), 200);
+
+        } else {
+
+        }
+    }
+
+    public function terminizadan(Request $request)
+    {
+        
+        $validator = Validator::make($request->all(), [
+            'dan_id' => 'required|integer',
+
+        ]);
+        if(!$validator->fails()) 
+        {
+            $termini = Termin::with(['predmet', 'dan'])
+    ->where('dan', $request->dan_id)
+    ->get();
+            return new TerminCollection($termini);
+        }
+        else
+        {
+            return "error";
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Termin $Termin)
+    {
+        //
+    }
+}

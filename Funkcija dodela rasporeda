@@ -1,0 +1,22 @@
+ public function dodeliraspored(Request $request)
+    {
+        if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|int',
+            'raspored_id'=>'required|int'
+        ]);
+        $student = User::find($request->user_id);
+        $student->raspored_id=$request->raspored_id;
+        $student->save();
+        return Response::json(array(
+                'code' => 200,
+                'message' => "Uspesno dodeljen raspored.",
+            ), 200);
+
+    }

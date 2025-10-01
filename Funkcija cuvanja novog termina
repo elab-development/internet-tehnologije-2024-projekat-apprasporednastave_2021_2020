@@ -1,0 +1,41 @@
+  public function btnovitermin(Request $request)
+    {
+                if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'termini'=>'required|array',
+            'termini.*.dan_id' => 'required|integer',
+            'termini.*.vreme_pocetak' => 'required|string',
+            'termini.*.vreme_kraj' => 'required|string',
+            'termini.*.predmet_id' => 'required|integer'
+
+        ]);
+        if(!$validator->fails()) {
+            $i=0;
+            for($j=0;$j<count($request->termini);$j++)
+            {
+            $t = new Termin();
+            $t->dan = $request->termini[$j]['dan_id'];
+            $t->pocetak = DateTime::createFromFormat('Y-m-d H:i:s', $request->termini[$j]['vreme_pocetak'])->format('Y-m-d H:i:s');
+            $t->kraj = DateTime::createFromFormat('Y-m-d H:i:s', $request->termini[$j]['vreme_kraj'])->format('Y-m-d H:i:s');
+            $t->predmet = $request->termini[$j]['predmet_id'];
+            $t->save();
+            $i++;
+            }
+            return Response::json(array(
+                'code' => 200,
+                'message' => "Uspesno kreirano ".$i." termina.",
+            ), 200);
+        } else {
+
+            return Response::json(array(
+                'code' => 400,
+                'message' => $validator->errors(),
+            ), 400);
+
+        }
+    }

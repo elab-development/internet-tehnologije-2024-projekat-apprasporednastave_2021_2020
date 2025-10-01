@@ -1,0 +1,171 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Support\Facades\Auth;
+use App\Models\Predmet;
+use App\Http\Resources\PredmetCollection;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Response;
+
+class PredmetController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        return new PredmetCollection(Predmet::all());
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        if(auth()->user()->rola!=1)
+        {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'naziv' => 'required|string',
+            'opis' => 'required|string',
+            'ESPB' => 'required|integer',
+
+        ]);
+        if (!$validator->fails()) 
+        {
+            $p = new Predmet();
+            $p->naziv = $request->naziv;
+            $p->opis = $request->opis;
+            $p->ESPB = $request->ESPB;
+            $p->save();
+            return Response::json(array(
+                'code' => 200,
+                'message' => "Predmet uspesno kreiran.",
+            ), 200);
+
+        } 
+        else 
+        {
+            return Response::json(array(
+                'code' => 400,
+                'message' => $validator->errors(),
+            ), 400);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Predmet $predmet)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Predmet $predmet)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request)
+    {
+        if(auth()->user()->rola!=1)
+        {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'id'=>'required|integer',
+            'naziv' => 'required|string',
+            'opis' => 'required|string',
+            'ESPB' => 'required|integer',
+
+        ]);
+        if (!$validator->fails()) 
+        {
+            $p = Predmet::find($request->id);
+            $p->naziv = $request->naziv;
+            $p->opis = $request->opis;
+            $p->ESPB = $request->ESPB;
+            $p->update();
+            return Response::json(array(
+                'code' => 200,
+                'message' => "Predmet uspesno azuriran.",
+            ), 200);
+
+        } 
+        else 
+        {
+            return Response::json(array(
+                'code' => 400,
+                'message' => $validator->errors(),
+            ), 400);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Request $request)
+    {
+            if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+        
+        $validator = Validator::make($request->all(), [
+            'predmet_id'
+        ]);
+        if($validator->fails())
+        {
+            return Response::json(array(
+                'code' => 400,
+                'message' => $validator->errors(),
+            ), 400);
+        }
+        $p = Predmet::find($request->predmet_id);
+        $p->delete();
+         return Response::json(array(
+                'code' => 200,
+                'message' => "Obrisan predmet",
+            ), 200);
+    }
+
+    public function predmeti($start,$cnt)
+    {
+        
+        $slice = Predmet::skip($start)->take($cnt)->get();
+        return Response::json(array('predmeti'=>$slice,'code'=>200),200);
+    }
+
+    public function maxpredmeta()
+    {
+        return Response::json(array(
+            'code'      =>  200,
+            'max_pred'   =>  Predmet::all()->count()
+        ), 200);
+    }
+}

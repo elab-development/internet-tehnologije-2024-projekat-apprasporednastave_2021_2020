@@ -1,0 +1,14 @@
+ public function dani_za_raspored(Request $request)
+    {
+        if(auth()->user()->rola!=1)
+        {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+        $validator = Validator::make($request->all(), [
+            'raspored_id' => 'required|int',
+        ]);
+        return new DanRasporedaCollection(Raspored::find($request->raspored_id)->dani);
+    }

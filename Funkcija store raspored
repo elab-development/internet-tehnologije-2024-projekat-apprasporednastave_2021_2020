@@ -1,0 +1,55 @@
+ public function store(Request $request)
+    {
+        if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name'=>'required|string',
+            'dani'=>'required|array',
+            'dani.*.datum'=>'required|string',
+            'dani.*.nastavni'=>'required|int'
+        ]);
+
+        $r = new Raspored();
+        $r->naziv=$request->name;
+        $r->save();
+        $id_dana=[];
+        if(!$validator->fails()) 
+        {
+            $dani=$request->dani;
+            for($i = 0;$i < count($dani);$i++) 
+            {
+                $d = new DanRasporeda();
+                $d->raspored_id = $r->id;
+                $d->datum = DateTime::createFromFormat('Y-m-d', $dani[$i]['datum'])->format('Y-m-d');
+        
+                if($dani[$i]['nastavni']==0)
+                {
+                    $d->nastavni = false;
+                }
+                else
+                {
+                    $d->nastavni=true;
+                }
+                $d->save();
+                $id_dana[]=$d->id;
+            }
+
+            return Response::json(array(
+                'code' => 200,
+                'message' => "Raspored uspesno kreiran.",
+                'id'=>$r->id,
+                'dani'=>$id_dana
+            ), 200);
+        } else {
+            return Response::json(array(
+                'code' => 400,
+                'message' => $validator->errors(),
+            ), 400);
+        }
+
+    }

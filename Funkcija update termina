@@ -1,0 +1,33 @@
+  public function update(Request $request)
+    {
+        if(auth()->user()->role != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'termin_id' => 'required|integer',
+            'vreme_pocetak' => 'required|string',
+            'vreme_kraj' => 'required|string',
+            'predmet_id' => 'required|integer'
+
+        ]);
+        if(!$validator->fails()) {
+            $t = Termin::find($request->termin_id);
+            $t->dan = $request->dan_id;
+            $t->pocetak = strtotime($request->vreme_pocetak);
+            $t->kraj = strtotime($request->vreme_kraj);
+            $t->predmet = $request->predmet_id;
+            $t->update();
+
+            return Response::json(array(
+                'code' => 200,
+                'message' => "Termin uspesno izmenjen.",
+            ), 200);
+
+        } else {
+
+        }
+    }

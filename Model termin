@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations;
+
+class Termin extends Model
+{
+    /** @use HasFactory<\Database\Factories\TerminFactory> */
+    use HasFactory;
+
+
+    protected $table = 'termin';
+
+    protected $fillable = [
+        'id',
+        'pocetak',
+        'kraj',
+        'predmet',   // or predmet_id
+        'dan_id',
+    ];
+
+    public function predmet()
+    {
+        return $this->belongsTo(Predmet::class, 'predmet', 'id');
+    }
+
+    public function dan()
+    {
+        return $this->belongsTo(DanRasporeda::class, 'dan_id', 'id');
+    }
+}

@@ -1,0 +1,23 @@
+public function statistika_studenta(Request $request)
+    {
+         if(auth()->user()->rola != 1) {
+            return Response::json(array(
+                'code' => 401,
+                'message' => "Unauthorized access",
+            ), 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+        ]);
+
+        return Response::json(
+            array('termini'=>
+            Termin::whereIn('id',
+            Prisutnost::where('student',$request->user_id)->pluck('termin'))->get(),
+            'max_termina'=>
+            Termin::whereIn('dan',
+            Raspored::find(
+                User::find($request->user_id)->raspored_id)->dani->pluck('id')
+                )->count()),200);
+    }

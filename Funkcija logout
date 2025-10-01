@@ -1,0 +1,8 @@
+ public function logout()
+    {
+        auth()->user()->tokens()->delete();
+        return Response::json(array(
+            'code'      =>  200,
+            'message'   =>  "User ".auth()->user()->name." logged out.",
+        ), 200);
+    }
