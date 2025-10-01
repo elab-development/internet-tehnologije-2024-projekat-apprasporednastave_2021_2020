@@ -1,0 +1,209 @@
+import React, { useState, useEffect } from "react";
+import "../../style/home.css";
+import Navbar from "../reusable/Navbar.jsx";
+import axios from "axios";
+import { GoPencil } from "react-icons/go";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+
+function MojProfilPage({}) {
+  const refreshPage = () => {
+    window.location.reload();
+  };
+  const [user, setUser] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    name: "",
+    confpassword: "",
+    password: "",
+  });
+
+  const [toggle, setToggle] = useState({
+    email: false,
+    name: false,
+    confpassword: false,
+    password: false,
+  });
+
+  var config = {
+    method: "get",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/user",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  var config2 = {
+    method: "patch",
+    maxBodyLength: Infinity,
+    url: "http://127.0.0.1:8000/api/izmeniprofil",
+    headers: {
+      Authorization: "Bearer " + window.sessionStorage.getItem("token"),
+      Accept: "application/json",
+    },
+    data: {},
+  };
+
+  useEffect(() => {
+    axios(config)
+      .then(function (response) {
+        setUser(response.data);
+        setFormData({
+          ...formData,
+          ["name"]: response.data.name,
+          ["email"]: response.data.email,
+          ["password"]: "",
+          ["confpassword"]: "",
+        });
+        setIsDirty(false);
+        setToggle({
+          ...toggle,
+          ["name"]: false,
+          ["email"]: false,
+          ["password"]: false,
+        });
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }, []);
+
+  function handleInput(e) {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+    setIsDirty(true);
+  }
+  function handleToggle(e) {
+    const { name } = e.currentTarget;
+    setToggle((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
+  }
+
+  function sendUser() {
+    if (formData.password.trim() != "" && formData.confpassword != formData.password) {
+      Swal.fire("Lozinke se ne slažu!", "", "error");
+      return;
+    }
+    if (formData.email.trim() === "") {
+      Swal.fire("E-mail nije u ispravnom formatu!", "", "error");
+      return;
+    }
+    if (formData.name.trim() === "") {
+      Swal.fire("Ime nije u ispravnom formatu!", "", "error");
+      return;
+    }
+    config2.data.name = user.name.trim() != formData.name ? formData.name : " ";
+    config2.data.email = user.email.trim() != formData.email ? formData.email : " ";
+    config2.data.password = formData.password.trim() === "" ? " " : formData.password;
+    axios(config2)
+      .then(function (response) {
+        if (response.data.code === 200) {
+          Swal.fire("Uspešno izmenjeni podaci!", "", "success");
+          refreshPage();
+          axios(config)
+            .then(function (response) {
+              setUser(response.data);
+              setFormData({
+                ...formData,
+                ["name"]: response.data.name,
+                ["email"]: response.data.email,
+              });
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        }
+      })
+      .catch(function (error) {
+        console.log(error);
+        Swal.fire("Greška!", "", "error");
+      });
+  }
+
+  return (
+    <div className="">
+      <div className="banner">
+        <img src={require("../../pic/topbannerslim.jpg")} />
+        <p className="bannertxt">Sistem za raspored nastave</p>
+      </div>
+      <div className="navbar">
+        <Navbar></Navbar>
+      </div>
+      <div className="content">
+        <br />
+        <div className="profilecontainer">
+          <img src={require("../../pic/blank.png")} className="rounded-circle mx-auto d-block profileimg"></img>
+
+          <div className="container">
+            <table className="mx-auto">
+              <tbody>
+                <tr>
+                  <td>&nbsp;</td>
+                  <td>{toggle.name ? <input name="name" onChange={handleInput} type="text" className="form-control-sm" value={formData.name}></input> : user ? <h2 className="instrtext">{user ? user.name : ""}</h2> : ""}</td>{" "}
+                  <td>
+                    <button name="name" type="button" className="btn btn-light" onClick={handleToggle}>
+                      <GoPencil />
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="boldfont">E-mail:</td>
+                  <td>{toggle.email ? <input name="email" onChange={handleInput} type="text" className="form-control-sm" value={formData.email}></input> : user ? user.email : ""}</td>
+                  <td>
+                    <button name="email" type="button" className="btn btn-light btn-sm" onClick={handleToggle}>
+                      <GoPencil />
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="boldfont">Password:</td>
+
+                  <td>{toggle.password ? <input onChange={handleInput} type="password" name="password" className="form-control-sm" value={formData.password}></input> : <em>Nije prikazano</em>}</td>
+
+                  <td>
+                    <button name="password" onClick={handleToggle} type="button" className="btn btn-light btn-sm">
+                      <GoPencil />
+                    </button>
+                  </td>
+                </tr>
+                {toggle.password ? (
+                  <tr>
+                    <td className="boldfont">Ponovi password:</td>
+
+                    <td>{toggle.password ? <input onChange={handleInput} name="confpassword" type="password" className="form-control-sm" value={formData.confpassword}></input> : <em>Nije prikazano</em>}</td>
+                  </tr>
+                ) : (
+                  <tr>
+                    <td>&nbsp;</td>
+                  </tr>
+                )}
+                {isDirty ? (
+                  <tr>
+                    <td>
+                      <button type="button" className="btn btn-success" onClick={sendUser}>
+                        Izmeni profil
+                      </button>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr>
+                    <td>&nbsp;</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+export default MojProfilPage;
